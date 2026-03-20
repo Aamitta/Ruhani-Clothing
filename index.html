@@ -1,67 +1,134 @@
-<script>
-    const whatsappNumber = "917009719553";
-    // Replace with your actual Published CSV link
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqx0OguiRTd1gUbV61Kdzafa2dNYuqTpw89NkM-qRIUGnK97VWI3PE1JKuhX1ynAvQEbAzJJUAcZl9/pub?gid=0&single=true&output=csv'; 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruhani Clothing | Premium Collection</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .size-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+        .loader { border-top-color: #4f46e5; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
 
-    function loadProducts() {
-        Papa.parse(sheetUrl, {
-            download: true,
-            header: true,
-            complete: function(results) {
-                const products = results.data;
-                const container = document.getElementById('product-container');
-                container.innerHTML = ""; // Clear container first
+    <header class="bg-white sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-extrabold tracking-tighter text-indigo-600">RUHANI CLOTHING</h1>
+            <div class="hidden md:block text-sm font-medium text-gray-500">WhatsApp: +91 9760629760</div>
+        </div>
+    </header>
 
-                products.forEach((product, index) => {
-                    if(!product.name) return;
+    <section class="py-12 px-6 text-center">
+        <h2 class="text-4xl font-extrabold mb-2">New Arrivals</h2>
+        <p class="text-gray-500">Explore our latest premium collection</p>
+    </section>
 
-                    // 1. Process Sizes
-                    const sizeList = product.sizes ? product.sizes.split(',').map(s => 
-                        `<button class="border border-gray-300 px-3 py-1 text-xs rounded-md hover:bg-indigo-600 hover:text-white transition">${s.trim()}</button>`
-                    ).join(' ') : "N/A";
+    <div id="loading" class="flex flex-col items-center justify-center py-20">
+        <div class="loader w-12 h-12 border-4 border-gray-200 rounded-full mb-4"></div>
+        <p class="text-gray-400 animate-pulse">Fetching latest styles...</p>
+    </div>
 
-                    // 2. Process Images
-                    const allImages = product.images ? product.images.split(',') : [];
-                    const mainImage = allImages.length > 0 ? allImages[0].trim() : "https://via.placeholder.com/300";
+    <main id="product-container" class="max-w-7xl mx-auto px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        </main>
 
-                    // 3. Inject HTML (Note the backticks ` used here)
-                    container.innerHTML += `
-                        <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col border border-gray-100">
-                            <div class="relative group">
-                                <img id="main-img-${index}" src="${mainImage}" class="w-full h-80 object-cover">
-                                ${allImages.length > 1 ? `
-                                    <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-                                        ${allImages.map((img, i) => `
-                                            <div onclick="document.getElementById('main-img-${index}').src='${img.trim()}'" 
-                                                 class="w-2.5 h-2.5 bg-white/70 rounded-full cursor-pointer hover:bg-white shadow-sm"></div>
-                                        `).join('')}
+    <script>
+        const whatsappNumber = "917009719553";
+        // REPLACE THIS LINK WITH YOUR PUBLISHED CSV LINK
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqx0OguiRTd1gUbV61Kdzafa2dNYuqTpw89NkM-qRIUGnK97VWI3PE1JKuhX1ynAvQEbAzJJUAcZl9/pub?gid=0&single=true&output=csv
+'; 
+
+        let selectedSizes = {}; // Tracks selected size for each product index
+
+        function selectSize(prodIndex, size, btn) {
+            selectedSizes[prodIndex] = size;
+            
+            // UI Feedback: Reset all buttons in this card, highlight clicked one
+            const card = btn.closest('.product-card');
+            card.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update WhatsApp Link for this specific product
+            const buyBtn = document.getElementById(`buy-link-${prodIndex}`);
+            const prodName = buyBtn.getAttribute('data-name');
+            buyBtn.href = `https://wa.me/${whatsappNumber}?text=Hi, I want to order ${prodName} in Size: ${size}`;
+        }
+
+        function loadProducts() {
+            Papa.parse(sheetUrl, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    document.getElementById('loading').classList.add('hidden');
+                    const products = results.data;
+                    const container = document.getElementById('product-container');
+
+                    products.forEach((product, index) => {
+                        if(!product.name) return;
+
+                        // 1. Process Images
+                        const allImages = product.images ? product.images.split(',') : [];
+                        const mainImage = allImages.length > 0 ? allImages[0].trim() : "https://via.placeholder.com/400x500?text=No+Image";
+
+                        // 2. Process Sizes
+                        const sizeList = product.sizes ? product.sizes.split(',').map(s => {
+                            const trimmedSize = s.trim();
+                            return `<button onclick="selectSize(${index}, '${trimmedSize}', this)" 
+                                    class="size-btn border border-gray-200 px-3 py-1.5 rounded-md text-sm font-semibold hover:border-indigo-600 transition duration-200">
+                                    ${trimmedSize}
+                                    </button>`;
+                        }).join('') : "";
+
+                        // 3. Render Card
+                        container.innerHTML += `
+                            <div class="product-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group">
+                                <div class="relative overflow-hidden aspect-[3/4]">
+                                    <img id="main-img-${index}" src="${mainImage}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                                    
+                                    ${allImages.length > 1 ? `
+                                        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+                                            ${allImages.map((img, i) => `
+                                                <div onclick="document.getElementById('main-img-${index}').src='${img.trim()}'" 
+                                                     class="w-2 h-2 bg-white/60 rounded-full cursor-pointer hover:bg-white active:scale-125 transition"></div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+
+                                <div class="p-6 flex flex-col flex-grow">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-xl font-bold text-gray-900">${product.name}</h3>
+                                        <span class="text-xl font-extrabold text-indigo-600">${product.price}</span>
                                     </div>
-                                ` : ''}
-                            </div>
+                                    <p class="text-gray-500 text-sm mb-6 line-clamp-2">${product.description}</p>
+                                    
+                                    <div class="mt-auto">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Available Sizes</p>
+                                        <div class="flex flex-wrap gap-2 mb-6">${sizeList}</div>
 
-                            <div class="p-5 flex-grow">
-                                <h2 class="text-xl font-bold text-gray-800">${product.name}</h2>
-                                <p class="text-gray-500 text-sm mt-1 mb-4">${product.description}</p>
-                                
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Size</p>
-                                <div class="flex flex-wrap gap-2 mt-2">${sizeList}</div>
-
-                                <div class="flex justify-between items-center mt-8">
-                                    <span class="text-2xl font-black text-indigo-600">${product.price}</span>
-                                    <a href="https://wa.me/${whatsappNumber}?text=Hi, I'm interested in ${product.name}" 
-                                       target="_blank"
-                                       class="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition">
-                                        Buy Now
-                                    </a>
+                                        <a id="buy-link-${index}" 
+                                           data-name="${product.name}"
+                                           href="https://wa.me/${whatsappNumber}?text=Hi, I want to order ${product.name}" 
+                                           target="_blank"
+                                           class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition duration-300 shadow-lg shadow-indigo-100">
+                                            Order via WhatsApp
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                });
-            }
-        });
-    }
+                        `;
+                    });
+                }
+            });
+        }
 
-    // Run the function when page loads
-    window.onload = loadProducts;
-</script>
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>
