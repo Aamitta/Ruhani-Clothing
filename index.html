@@ -1,61 +1,67 @@
-const whatsappNumber = "919760629760";
-const sheetUrl = 'YOUR_PUBLISHED_CSV_LINK';
+<script>
+    const whatsappNumber = "917009719553";
+    // Replace with your actual Published CSV link
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqx0OguiRTd1gUbV61Kdzafa2dNYuqTpw89NkM-qRIUGnK97VWI3PE1JKuhX1ynAvQEbAzJJUAcZl9/pub?gid=0&single=true&output=csv'; 
 
-function loadProducts() {
-    Papa.parse(sheetUrl, {
-        download: true,
-        header: true,
-        complete: function(results) {
-            const products = results.data;
-            const container = document.getElementById('product-container');
-            
-            products.forEach((product, index) => {
-                if(!product.name) return;
+    function loadProducts() {
+        Papa.parse(sheetUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const products = results.data;
+                const container = document.getElementById('product-container');
+                container.innerHTML = ""; // Clear container first
 
-                // 1. Process Sizes
-                const sizeList = product.sizes.split(',').map(s => 
-                    `<button class="border border-gray-300 px-2 py-1 text-xs rounded hover:bg-indigo-600 hover:text-white transition">${s.trim()}</button>`
-                ).join(' ');
+                products.forEach((product, index) => {
+                    if(!product.name) return;
 
-                // 2. Process Images (Take the first one as main)
-                const allImages = product.images.split(',');
-                const mainImage = allImages[0].trim();
+                    // 1. Process Sizes
+                    const sizeList = product.sizes ? product.sizes.split(',').map(s => 
+                        `<button class="border border-gray-300 px-3 py-1 text-xs rounded-md hover:bg-indigo-600 hover:text-white transition">${s.trim()}</button>`
+                    ).join(' ') : "N/A";
 
-                container.innerHTML += `
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
-                        <div class="relative group">
-                            <img id="main-img-${index}" src="${mainImage}" class="w-full h-80 object-cover">
-                            ${allImages.length > 1 ? `
-                                <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                                    ${allImages.map((img, i) => `
-                                        <div onclick="document.getElementById('main-img-${index}').src='${img.trim()}'" 
-                                             class="w-3 h-3 bg-white/50 rounded-full cursor-pointer hover:bg-white"></div>
-                                    `).join('')}
+                    // 2. Process Images
+                    const allImages = product.images ? product.images.split(',') : [];
+                    const mainImage = allImages.length > 0 ? allImages[0].trim() : "https://via.placeholder.com/300";
+
+                    // 3. Inject HTML (Note the backticks ` used here)
+                    container.innerHTML += `
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col border border-gray-100">
+                            <div class="relative group">
+                                <img id="main-img-${index}" src="${mainImage}" class="w-full h-80 object-cover">
+                                ${allImages.length > 1 ? `
+                                    <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                                        ${allImages.map((img, i) => `
+                                            <div onclick="document.getElementById('main-img-${index}').src='${img.trim()}'" 
+                                                 class="w-2.5 h-2.5 bg-white/70 rounded-full cursor-pointer hover:bg-white shadow-sm"></div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="p-5 flex-grow">
+                                <h2 class="text-xl font-bold text-gray-800">${product.name}</h2>
+                                <p class="text-gray-500 text-sm mt-1 mb-4">${product.description}</p>
+                                
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Size</p>
+                                <div class="flex flex-wrap gap-2 mt-2">${sizeList}</div>
+
+                                <div class="flex justify-between items-center mt-8">
+                                    <span class="text-2xl font-black text-indigo-600">${product.price}</span>
+                                    <a href="https://wa.me/${whatsappNumber}?text=Hi, I'm interested in ${product.name}" 
+                                       target="_blank"
+                                       class="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition">
+                                        Buy Now
+                                    </a>
                                 </div>
-                            ` : ''}
-                        </div>
-
-                        <div class="p-5 flex-grow">
-                            <h2 class="text-xl font-bold text-gray-800">${product.name}</h2>
-                            <p class="text-gray-500 text-sm mt-1">${product.description}</p>
-                            
-                            <div class="mt-4">
-                                <p class="text-xs font-semibold text-gray-400 uppercase">Available Sizes</p>
-                                <div class="flex gap-2 mt-2">${sizeList}</div>
-                            </div>
-
-                            <div class="flex justify-between items-center mt-6">
-                                <span class="text-2xl font-black text-indigo-600">${product.price}</span>
-                                <a href="https://wa.me/${whatsappNumber}?text=Hi, I want to order ${product.name}. Size: " 
-                                   target="_blank"
-                                   class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition">
-                                    WhatsApp Buy
-                                </a>
                             </div>
                         </div>
-                    </div>
-                `;
-            });
-        }
-    });
-}
+                    `;
+                });
+            }
+        });
+    }
+
+    // Run the function when page loads
+    window.onload = loadProducts;
+</script>
