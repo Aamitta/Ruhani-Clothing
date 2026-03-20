@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruhani Clothing - Live Sheets</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-100">
+
+    <nav class="p-6 bg-white shadow-md flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-indigo-600">AKASH CLOTHING</h1>
+        <div class="text-sm text-gray-500">Admin via Google Sheets</div>
+    </nav>
+
+    <div id="product-container" class="max-w-6xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        </div>
+
+    <script>
+        const whatsappNumber = "917009719553";
+        // PASTE YOUR PUBLISHED CSV LINK HERE
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqx0OguiRTd1gUbV61Kdzafa2dNYuqTpw89NkM-qRIUGnK97VWI3PE1JKuhX1ynAvQEbAzJJUAcZl9/pub?gid=0&single=true&output=csv';
+
+        function loadProducts() {
+            Papa.parse(sheetUrl, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const products = results.data;
+                    const container = document.getElementById('product-container');
+                    
+                    products.forEach(product => {
+                        // Check if row is not empty
+                        if(product.name) {
+                            container.innerHTML += `
+                                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                                    <img src="${product.image}" class="w-full h-72 object-cover">
+                                    <div class="p-5">
+                                        <h2 class="text-xl font-bold text-gray-800">${product.name}</h2>
+                                        <p class="text-gray-500 mt-2 text-sm">${product.description}</p>
+                                        <div class="flex justify-between items-center mt-5">
+                                            <span class="text-2xl font-extrabold text-indigo-600">${product.price}</span>
+                                            <a href="https://wa.me/${whatsappNumber}?text=Hi, I want to order ${product.name}" 
+                                               target="_blank"
+                                               class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full font-medium transition">
+                                                Buy Now
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            });
+        }
+
+        window.onload = loadProducts;
+    </script>
+</body>
+</html>
