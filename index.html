@@ -1,134 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruhani Clothing | Premium Collection</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .size-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-        .loader { border-top-color: #4f46e5; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-900">
-
-    <header class="bg-white sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-extrabold tracking-tighter text-indigo-600">RUHANI CLOTHING</h1>
-            <div class="hidden md:block text-sm font-medium text-gray-500">WhatsApp: +91 9760629760</div>
-        </div>
-    </header>
-
-    <section class="py-12 px-6 text-center">
-        <h2 class="text-4xl font-extrabold mb-2">New Arrivals</h2>
-        <p class="text-gray-500">Explore our latest premium collection</p>
-    </section>
-
-    <div id="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="loader w-12 h-12 border-4 border-gray-200 rounded-full mb-4"></div>
-        <p class="text-gray-400 animate-pulse">Fetching latest styles...</p>
-    </div>
-
-    <main id="product-container" class="max-w-7xl mx-auto px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-        </main>
-
-    <script>
-        const whatsappNumber = "917009719553";
-        // REPLACE THIS LINK WITH YOUR PUBLISHED CSV LINK
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqx0OguiRTd1gUbV61Kdzafa2dNYuqTpw89NkM-qRIUGnK97VWI3PE1JKuhX1ynAvQEbAzJJUAcZl9/pub?gid=0&single=true&output=csv
+<script>
+    const whatsappNumber = "917009719553";
+    // IMPORTANT: Ensure this URL ends with output=csv
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqx0OguiRTd1gUbV61Kdzafa2dNYuqTpw89NkM-qRIUGnK97VWI3PE1JKuhX1ynAvQEbAzJJUAcZl9/pub?gid=0&single=true&output=csv
 '; 
 
-        let selectedSizes = {}; // Tracks selected size for each product index
+    let selectedSizes = {}; 
 
-        function selectSize(prodIndex, size, btn) {
-            selectedSizes[prodIndex] = size;
-            
-            // UI Feedback: Reset all buttons in this card, highlight clicked one
-            const card = btn.closest('.product-card');
-            card.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+    function selectSize(prodIndex, size, btn) {
+        selectedSizes[prodIndex] = size;
+        const card = btn.closest('.product-card');
+        card.querySelectorAll('.size-btn').forEach(b => {
+            b.style.backgroundColor = 'white';
+            b.style.color = 'black';
+        });
+        btn.style.backgroundColor = '#4f46e5';
+        btn.style.color = 'white';
 
-            // Update WhatsApp Link for this specific product
-            const buyBtn = document.getElementById(`buy-link-${prodIndex}`);
-            const prodName = buyBtn.getAttribute('data-name');
-            buyBtn.href = `https://wa.me/${whatsappNumber}?text=Hi, I want to order ${prodName} in Size: ${size}`;
-        }
+        const buyBtn = document.getElementById(`buy-link-${prodIndex}`);
+        const prodName = buyBtn.getAttribute('data-name');
+        buyBtn.href = `https://wa.me/${whatsappNumber}?text=Hi, I want to order ${prodName} in Size: ${size}`;
+    }
 
-        function loadProducts() {
-            Papa.parse(sheetUrl, {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    document.getElementById('loading').classList.add('hidden');
-                    const products = results.data;
-                    const container = document.getElementById('product-container');
+    function loadProducts() {
+        Papa.parse(sheetUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const loadingElement = document.getElementById('loading');
+                if(loadingElement) loadingElement.style.display = 'none';
 
-                    products.forEach((product, index) => {
-                        if(!product.name) return;
+                const products = results.data;
+                const container = document.getElementById('product-container');
 
-                        // 1. Process Images
-                        const allImages = product.images ? product.images.split(',') : [];
-                        const mainImage = allImages.length > 0 ? allImages[0].trim() : "https://via.placeholder.com/400x500?text=No+Image";
+                products.forEach((product, index) => {
+                    if(!product.name) return;
 
-                        // 2. Process Sizes
-                        const sizeList = product.sizes ? product.sizes.split(',').map(s => {
-                            const trimmedSize = s.trim();
-                            return `<button onclick="selectSize(${index}, '${trimmedSize}', this)" 
-                                    class="size-btn border border-gray-200 px-3 py-1.5 rounded-md text-sm font-semibold hover:border-indigo-600 transition duration-200">
-                                    ${trimmedSize}
-                                    </button>`;
-                        }).join('') : "";
+                    const allImages = product.images ? product.images.split(',') : [];
+                    const mainImage = allImages.length > 0 ? allImages[0].trim() : "https://via.placeholder.com/400x500?text=No+Image";
 
-                        // 3. Render Card
-                        container.innerHTML += `
-                            <div class="product-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group">
-                                <div class="relative overflow-hidden aspect-[3/4]">
-                                    <img id="main-img-${index}" src="${mainImage}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
-                                    
-                                    ${allImages.length > 1 ? `
-                                        <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                                            ${allImages.map((img, i) => `
-                                                <div onclick="document.getElementById('main-img-${index}').src='${img.trim()}'" 
-                                                     class="w-2 h-2 bg-white/60 rounded-full cursor-pointer hover:bg-white active:scale-125 transition"></div>
-                                            `).join('')}
-                                        </div>
-                                    ` : ''}
-                                </div>
+                    const sizeButtons = product.sizes ? product.sizes.split(',').map(s => {
+                        const sz = s.trim();
+                        return `<button onclick="selectSize(${index}, '${sz}', this)" class="size-btn border border-gray-200 px-3 py-1.5 rounded-md text-sm font-semibold">${sz}</button>`;
+                    }).join('') : "";
 
-                                <div class="p-6 flex flex-col flex-grow">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="text-xl font-bold text-gray-900">${product.name}</h3>
-                                        <span class="text-xl font-extrabold text-indigo-600">${product.price}</span>
-                                    </div>
-                                    <p class="text-gray-500 text-sm mb-6 line-clamp-2">${product.description}</p>
-                                    
-                                    <div class="mt-auto">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Available Sizes</p>
-                                        <div class="flex flex-wrap gap-2 mb-6">${sizeList}</div>
-
-                                        <a id="buy-link-${index}" 
-                                           data-name="${product.name}"
-                                           href="https://wa.me/${whatsappNumber}?text=Hi, I want to order ${product.name}" 
-                                           target="_blank"
-                                           class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition duration-300 shadow-lg shadow-indigo-100">
-                                            Order via WhatsApp
-                                        </a>
-                                    </div>
-                                </div>
+                    // Using a cleaner way to build the HTML to avoid Syntax Errors
+                    const htmlContent = `
+                        <div class="product-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                            <div class="relative aspect-[3/4]">
+                                <img id="main-img-${index}" src="${mainImage}" class="w-full h-full object-cover">
                             </div>
-                        `;
-                    });
-                }
-            });
-        }
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold">${product.name}</h3>
+                                    <span class="text-xl font-extrabold text-indigo-600">${product.price}</span>
+                                </div>
+                                <p class="text-gray-500 text-sm mb-4">${product.description}</p>
+                                <div class="flex flex-wrap gap-2 mb-6">${sizeButtons}</div>
+                                <a id="buy-link-${index}" data-name="${product.name}" href="https://wa.me/${whatsappNumber}" target="_blank" class="block w-full text-center bg-indigo-600 text-white font-bold py-3 rounded-xl">
+                                    Order via WhatsApp
+                                </a>
+                            </div>
+                        </div>`;
+                    
+                    container.innerHTML += htmlContent;
+                });
+            },
+            error: function(err) {
+                console.error("PapaParse Error:", err);
+            }
+        });
+    }
 
-        window.onload = loadProducts;
-    </script>
-</body>
-</html>
+    window.onload = loadProducts;
+</script>
